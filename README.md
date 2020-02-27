@@ -120,9 +120,9 @@ export INGRESS_CLASS_ANNOTATION=<ingress_controller_class_annotation>
 
 ### Set Application Insights off
 
-To run this demo **without** Application Insights, run the command:
-
 Note, sample help repo add command: Refer https://docs.microsoft.com/en-us/azure/container-registry/container-registry-helm-repos.
+
+To run this demo **without** Application Insights, run the command:
 
 ```bash
 helm install online-store ./charts/online-store --set counter.specialNodeName=$VK_NODE_NAME,app.ingress.host=store.$INGRESS_EXTERNAL_IP.nip.io,appInsight.enabled=false,app.ingress.annotations."kubernetes\.io/ingress\.class"=$INGRESS_CLASS_ANNOTATION
