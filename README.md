@@ -121,6 +121,7 @@ export INGRESS_CLASS_ANNOTATION=<ingress_controller_class_annotation>
 ### Set Application Insights off
 
 To run this demo **without** Application Insights, run the command:
+
 Note, sample help repo add command: Refer https://docs.microsoft.com/en-us/azure/container-registry/container-registry-helm-repos.
 
 ```bash
