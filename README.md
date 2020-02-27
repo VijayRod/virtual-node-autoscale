@@ -123,7 +123,7 @@ export INGRESS_CLASS_ANNOTATION=<ingress_controller_class_annotation>
 To run this demo **without** Application Insights, run the command:
 
 ```bash
-helm install ./charts/online-store --name online-store --set counter.specialNodeName=$VK_NODE_NAME,app.ingress.host=store.$INGRESS_EXTERNAL_IP.nip.io,appInsight.enabled=false,app.ingress.annotations."kubernetes\.io/ingress\.class"=$INGRESS_CLASS_ANNOTATION
+helm install online-store ./charts/online-store --set counter.specialNodeName=$VK_NODE_NAME,app.ingress.host=store.$INGRESS_EXTERNAL_IP.nip.io,appInsight.enabled=false,app.ingress.annotations."kubernetes\.io/ingress\.class"=$INGRESS_CLASS_ANNOTATION
 ```
 
 ## Deploy the Prometheus Metric Adapter
@@ -131,7 +131,7 @@ helm install ./charts/online-store --name online-store --set counter.specialNode
 NOTE: if you have the Azure application insights adapter installed, you'll need to remove that first.
 
 ```bash
-helm install stable/prometheus-adapter --name prometheus-adaptor -f ./online-store/prometheus-config/prometheus-adapter/values.yaml
+helm install prometheus-adaptor stable/prometheus-adapter -f ./online-store/prometheus-config/prometheus-adapter/values.yaml
 ```
 
 There might be some lag time between when you create the adapter and when the metrics are available.
