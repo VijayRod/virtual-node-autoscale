@@ -17,6 +17,7 @@ This demo was used at Microsoft Ignite 2018 Kenote. Check out the [video](https:
 
 ## Prerequisites
 * [Virtual node enabled AKS cluster](https://docs.microsoft.com/azure/aks/virtual-kubelet) running Kubernetes version 1.10 or later. Note: If created through portal, this will automatically set AKS with Advanced Networking
+* Optionally, a VM for load test.
 
 ## Initialize Helm
 
