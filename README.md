@@ -16,7 +16,7 @@ This repository will guide you through first installing the Prometheus Operator.
 This demo was used at Microsoft Ignite 2018 Kenote. Check out the [video](https://mediastream.microsoft.com/events/2018/1809/Ignite/player/tracks/track2.html?start=17300).
 
 ## Prerequisites
-* [Virtual node enabled AKS cluster](https://docs.microsoft.com/azure/aks/virtual-kubelet) running Kubernetes version 1.10 or later. If created through portal, this will automatically set AKS with Advanced Networking
+* [Virtual node enabled AKS cluster](https://docs.microsoft.com/azure/aks/virtual-kubelet) running Kubernetes version 1.10 or later. Note: If created through portal, this will automatically set AKS with Advanced Networking
 
 ## Initialize Helm
 
@@ -69,7 +69,7 @@ virtual-kubelet            Ready     agent     16h       v1.8.3
 
 In this case, it's Virtual Kubelet. If you've installed with the ACI Connector, you may have a node name like **virtual-kubelet-aci-connector-linux-westcentralus**.
 
-Export the node name to an environment variable
+Export the node name to an environment variable. Note, sample command: export VK_NODE_NAME=virtual-node-aci-linux
 
 ```bash
 export VK_NODE_NAME=<your_node_name>
@@ -112,7 +112,7 @@ Next find the Ingress controller class name.
 kubectl -n <ingress_controller_namespace> get po <ingress_controller_pod_name> -o yaml | grep ingress-class | sed -e 's/.*=//'
 ```
 
-Export the Ingress controller class annotation.
+Export the Ingress controller class annotation. Note, sample command: export INGRESS_CLASS_ANNOTATION=addon-http-application-routing
 
 ```bash
 export INGRESS_CLASS_ANNOTATION=<ingress_controller_class_annotation>
@@ -180,7 +180,7 @@ $ kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/default/pod/*
 
 ## Hit it with some Load
 
-I've been using [Hey](https://github.com/rakyll/hey)
+I've been using [Hey](https://github.com/rakyll/hey). Note, sample URL: http://store.20.44.193.79.nip.io
 
 ```
 export GOPATH=~/go
