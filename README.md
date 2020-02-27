@@ -9,71 +9,22 @@ products:
 
 # Virtual node Autoscale Demo
 
-This my repository demonstrates how to use custom metrics in combination with the Kubernetes Horizontal Pod Autoscaler to autoscale an application. Virtual nodes let you scale quickly and easily run Kubernetes pods on Azure Container Instances where you'll pay only for the container instance runtime. 
+This repository demonstrates how to use custom metrics in combination with the Kubernetes Horizontal Pod Autoscaler to autoscale an application. Virtual nodes let you scale quickly and easily run Kubernetes pods on Azure Container Instances where you'll pay only for the container instance runtime. 
 
-This repository will guide you through first installing the virtual node admission controller, followed by the Prometheus Operator. Then create a Prometheus instance and install the Prometheus Metric Adapter. With these in place, the provided Helm chart will install our demo application, along with supporting monitoring components, like a **ServiceMonitor** for Prometheus, a Horizontal Pod Autoscaler, and a custom container that will count the instances of the application and expose them to Prometheus. Finally, an optional Grafana dashboard can be installed to view the metrics in real-time.
+This repository will guide you through first installing the Prometheus Operator. Then create a Prometheus instance and install the Prometheus Metric Adapter. With these in place, the provided Helm chart will install our demo application, along with supporting monitoring components, like a **ServiceMonitor** for Prometheus, and a Horizontal Pod Autoscaler. 
 
 This demo was used at Microsoft Ignite 2018 Kenote. Check out the [video](https://mediastream.microsoft.com/events/2018/1809/Ignite/player/tracks/track2.html?start=17300).
 
 ## Prerequisites
-* [Virtual node enabled AKS cluster](https://docs.microsoft.com/azure/aks/virtual-kubelet) running Kubernetes version 1.10 or later
-* Setup AKS with Advanced Networking
-* [MutatingAdmissionWebhook admission controller](https://kubernetes.io/docs/admin/extensible-admission-controllers/#external-admission-webhooks) activated
-* Running Ingress controller (nginx or similar)
+* [Virtual node enabled AKS cluster](https://docs.microsoft.com/azure/aks/virtual-kubelet) running Kubernetes version 1.10 or later. If created through portal, this will automatically set AKS with Advanced Networking
 
 ## Initialize Helm
 
-Helm will be used to install the both the demo application and the supporting components. First ensure you have Helm [installed](https://docs.helm.sh/using_helm/#installing-helm). Once installed, you will need to initialize your cluster to use Helm. To do this, you will install the `Tiller` component with the `helm init` command.
+Helm will be used to install the both the demo application and the supporting components. First ensure you have Helm [installed](https://docs.helm.sh/using_helm/#installing-helm). Once installed, you will need to initialize your cluster to use Helm. Note: This document is for Helm 3, so does not require/have helm init --service-account.
 
 ```
 kubectl -n kube-system create sa tiller
 kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-helm init --service-account tiller
-```
-
-## Install Virtual Node admission-controller (OPTIONAL)
-
-In order to control the Kubernetes scheduler to "favor" VM backed Kubernetes nodes BEFORE scaling out to the virtual node we can use a Kubernetes Webhook Admission Controller to add pod affinity and toleration key/values to all pods in a correctly labeled namespace.
-
-### Pod patches
-
-All pods on a correctly labelled namespace will be patched as follows:
-
-#### Anti-affinity
-
-```yaml
-spec:
-  affinity:
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-      - preference:
-          matchExpressions:
-          - key: type
-            operator: NotIn
-            values:
-            - virtual-kubelet
-```
-
-#### Toleration
-
-```yaml
-spec:
-  tolerations:
-  - key: virtual-kubelet.io/provider
-    operator: Exists
-  - effect: NoSchedule
-    key: azure.com/aci
-```
-
-### Install
-
-```
-helm install --name vn-affinity ./charts/vn-affinity-admission-controller
-```
-
-Label the namespace you wish enable the webhook to function on
-```
-kubectl label namespace default vn-affinity-injection=enabled
 ```
 
 ## Install Prometheus Operator
@@ -167,14 +118,8 @@ Export the Ingress controller class annotation.
 export INGRESS_CLASS_ANNOTATION=<ingress_controller_class_annotation>
 ```
 
-### Set Application Insights on or off
+### Set Application Insights off
 
-By default, the online store will also send data to [Application Insights](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-nodejs-quick-start#enable-application-insights). Once you have created a workspace, you'll need the [`Instrumentation Key`](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-nodejs-quick-start#configure-app-insights-sdk). If you'd prefer to run without Application Insights, you can skip this step.
-
-```bash
-export APP_INSIGHT_KEY=<INSTRUMENTATION_KEY>
-helm install ./charts/online-store --name online-store --set counter.specialNodeName=$VK_NODE_NAME,app.ingress.host=store.$INGRESS_EXTERNAL_IP.nip.io,appInsight.key=$APP_INSIGHT_KEY,app.ingress.annotations."kubernetes\.io/ingress\.class"=$INGRESS_CLASS_ANNOTATION
-```
 To run this demo **without** Application Insights, run the command:
 
 ```bash
@@ -232,26 +177,6 @@ $ kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1/namespaces/default/pod/*
 }
 ```
 
-## Deploy the Grafana Dashboard (OPTIONAL)
-
-This optional step installs a Grafana dashboard to view measured metrics in real-time.
-
-```bash
-helm install stable/grafana --name grafana -f grafana/values.yaml
-```
-
-Retreive admin user password for UI access
-```bash
-kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-```
-
-Use kubectl to create a port-forward to the grafana pod
-```bash
-export POD_NAME=$(kubectl get pods --namespace default -l "app=grafana" -o jsonpath="{.items[0].metadata.name}")
-kubectl --namespace default port-forward $POD_NAME 3000
-```
-
-Browse to localhost:3000 and login
 
 ## Hit it with some Load
 
@@ -278,35 +203,3 @@ online-store   Deployment/online-store   141 / 10   2         10        4       
 ```
 
 Overtime, this should go up.
-
-## Some Prometheus Queries
-
-Rounded average requests per second per container
-
-```
-round(avg(irate(request_durations_histogram_secs_count[1m])))
-```
-
-Rounded total requests per second
-
-```
-round(sum(irate(request_durations_histogram_secs_count[1m])))
-```
-
-Individual number of data points, should correspond to number of containers
-
-```
-count(irate(request_durations_histogram_secs_count[1m]))
-```
-
-The number of containers running, per the counter
-
-```
-running_containers
-```
-
-Average response time in seconds:
-
-```
-avg(request_durations_histogram_secs_sum / request_durations_histogram_secs_count)
-```
